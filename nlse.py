@@ -7,7 +7,7 @@ import matplotlib.animation as animation
 N = 2048
 x = np.linspace(-10, 10, N)
 k = 10 ** 8
-delta_t = 0.002
+delta_t = 0.05
 
 # initial condition
 psi0_1 = 1
@@ -25,7 +25,7 @@ psi_t = []
 for n in range(N):
     psi = np.fft.ifft(np.exp(-1j * k ** 2 * delta_t/2) *
                       np.fft.fft(np.exp(1j*delta_t*(psi ** 2 - x*np.linalg.norm(a)))*psi))
-    psi_t.append(psi)
+    psi_t.append(np.absolute(psi))
 
 
 # plot
@@ -47,7 +47,7 @@ def animate(i):
 
 
 plt.xlim(-10, 10)
-plt.ylim(-10, 10)
+plt.ylim(0, 5)
 animate(1)
 anim = animation.FuncAnimation(
     fig, animate, frames=len(psi_t), interval=1, init_func=init)
