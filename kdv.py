@@ -2,7 +2,6 @@
 # Based on https://wikiwaves.org/Numerical_Solution_of_the_KdV
 
 import numpy as np
-import math
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import random as rnd
