@@ -1,38 +1,55 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import random as rnd
 
+def range_with_last(start, end, step):
+    return np.arange(start, end + (step / 2), step)
 
 # params
-N = 2048
+N = 256//2
 x = np.linspace(-10, 10, N)
-k = 10 ** 8
-delta_t = 0.05
+delta_t = 1/(N**2)
+t_max = 10
+
+delta_x = x[1] - x[0]
+delta_k = 2 * np.pi / (N * delta_x)
+k = np.concatenate((range_with_last(0, (N/2) * delta_k, delta_k),
+                    range_with_last(-((N/2)-1) * delta_k, -delta_k, delta_k)))
+
 
 # initial condition
-psi0_1 = 1
-psi0_2 = 0
-psi = psi0_1 + 1j*psi0_2
-r1 = np.random.uniform(-1, 1, 10).T
-r2 = np.random.uniform(-1, 1, 10).T
-a1 = 0.2 * r1
-a2 = 0.2 * r2
-a = a1 + a2
+height = np.loadtxt('data/north_atlantic/height_m.dat')[:100]
+period = np.loadtxt('data/north_atlantic/period_m.dat')[:100]
 
+result = []
+u = np.ones_like(x)
+for h, l in zip(height, period):
+    phi = 2 * rnd.random() * np.pi
+    k1 = 2 * np.pi * 0.001 / l
+    u += h * np.sin(k1*x + phi)
+
+u += abs(min(u))
+u = abs(u)
+u = u/max(u)
+u = u * 2
+u += 10
+
+psi = u
 
 # solver
 psi_t = []
-for n in range(N):
+
+for n in range(int(t_max//delta_t)):
+    a = 0.01
     psi = np.fft.ifft(np.exp(-1j * k ** 2 * delta_t/2) *
-                      np.fft.fft(np.exp(1j*delta_t*(psi ** 2 - x*np.linalg.norm(a)))*psi))
+                        np.fft.fft(np.exp(1j*delta_t*(psi ** 2 - x*np.linalg.norm(a)))*psi))
     psi_t.append(np.absolute(psi))
+result.append(max(abs(psi)))
 
-
-# plot
 fig = plt.figure()
 ax = plt.axes()
 line, = ax.plot([], [])
-
 
 def init():
     global line
@@ -47,7 +64,7 @@ def animate(i):
 
 
 plt.xlim(-10, 10)
-plt.ylim(0, 5)
+plt.ylim(0, 16)
 animate(1)
 anim = animation.FuncAnimation(
     fig, animate, frames=len(psi_t), interval=1, init_func=init)
