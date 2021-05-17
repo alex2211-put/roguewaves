@@ -14,8 +14,7 @@ t_max = 10
 
 delta_x = x[1] - x[0]
 delta_k = 2 * np.pi / (N * delta_x)
-k = np.concatenate((range_with_last(0, (N/2) * delta_k, delta_k),
-                    range_with_last(-((N/2)-1) * delta_k, -delta_k, delta_k)))
+k = 1
 
 
 # initial condition
