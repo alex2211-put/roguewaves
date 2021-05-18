@@ -1,51 +1,31 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import random as rnd
 
-def range_with_last(start, end, step):
-    return np.arange(start, end + (step / 2), step)
 
 # params
-N = 256//2
-x = np.linspace(-10, 10, N)
-delta_t = 1/(N**2)
-t_max = 10
-
-delta_x = x[1] - x[0]
-delta_k = 2 * np.pi / (N * delta_x)
-k = 1
-
+N = 2048
+x = np.linspace(-1000, 1000, N)
+k = 2500*0.001
+delta_t = 0.01
 
 # initial condition
-height = np.loadtxt('data/north_atlantic/height_m.dat')[:100]
-period = np.loadtxt('data/north_atlantic/period_m.dat')[:100]
-
-result = []
-u = np.ones_like(x)
-for h, l in zip(height, period):
-    phi = 2 * rnd.random() * np.pi
-    k1 = 2 * np.pi * 0.001 / l
-    u += h * np.sin(k1*x + phi)
-
-u += abs(min(u))
-u = abs(u)
-u = u/max(u)
-u = u * 2
-u += 10
-
-psi = u
-
-# solver
+psi = np.ones(2048)
 psi_t = []
-
-for n in range(int(t_max//delta_t)):
-    a = 0.01
-    psi = np.fft.ifft(np.exp(-1j * k ** 2 * delta_t/2) *
-                        np.fft.fft(np.exp(1j*delta_t*(psi ** 2 - x*np.linalg.norm(a)))*psi))
-    psi_t.append(np.absolute(psi))
-result.append(max(abs(psi)))
-
+m = 0
+# solver
+for i in range(N):
+    r1 = np.random.uniform(-1, 1, 10).T
+    r2 = np.random.uniform(-1, 1, 10).T
+    a = 0.2*r1 + 0.2*r2
+    psi_linear = np.exp(1j*delta_t*(np.abs(psi) ** 2 - x * np.linalg.norm(a)))*psi
+    psi = np.fft.ifft((psi_linear + (np.exp(-1j * k ** 2 * delta_t / 2) * np.fft.fft(psi_linear))))
+    psi_t.append(np.real(psi))
+    mux = max(np.real(psi))
+    if mux > m:
+        m = mux
+print(m)
+# plot
 fig = plt.figure()
 ax = plt.axes()
 line, = ax.plot([], [])
@@ -62,8 +42,8 @@ def animate(i):
     return line,
 
 
-plt.xlim(-10, 10)
-plt.ylim(0, 16)
+plt.xlim(-500, 500)
+plt.ylim(-10, 10)
 animate(1)
 anim = animation.FuncAnimation(
     fig, animate, frames=len(psi_t), interval=1, init_func=init)
